@@ -11,6 +11,7 @@ jobs:
       group: review-${{ github.ref }}
       cancel-in-progress: true
     steps:
+      - uses: actions/checkout@v4
       - uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
