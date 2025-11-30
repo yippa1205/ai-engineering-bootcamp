@@ -1,0 +1,18 @@
+name: Security Review
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    concurrency:
+      group: security-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: "/security-review"
+          claude_args: "--max-turns 5 --model claude-sonnet-4-5-20250929"
