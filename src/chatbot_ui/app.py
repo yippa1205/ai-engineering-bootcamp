@@ -51,8 +51,12 @@ if prompt := st.chat_input("Hello! How can I assist you today?"):
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
-        output = api_call("post", f"{config.API_URL}/rag", json={"query": prompt})
-        response_data = output[1]
-        answer = response_data["answer"]
-        st.write(answer)
-    st.session_state.messages.append({"role": "assistant", "content": answer})
+        success, response_data = api_call("post", f"{config.API_URL}/rag/", json={"query": prompt})
+        if success and "answer" in response_data:
+            answer = response_data["answer"]
+            st.write(answer)
+            st.session_state.messages.append({"role": "assistant", "content": answer})
+        else:
+            error_message = response_data.get("message", "An error occurred while processing your request.")
+            st.error(error_message)
+            st.session_state.messages.append({"role": "assistant", "content": f"Error: {error_message}"})
