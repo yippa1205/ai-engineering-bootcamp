@@ -23,3 +23,4 @@ class RequestIDMiddleware(BaseHTTPMiddleware):
         logger.info(f"Request completed: {request.method} {request.url.path} (request_id: {request_id})")
 
         return response
+        

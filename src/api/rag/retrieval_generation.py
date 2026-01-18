@@ -1,7 +1,9 @@
 import openai
 from qdrant_client import QdrantClient
 
+from langsmith import traceable
 
+@traceable
 def get_embedding(text, model="text-embedding-3-small"):
     response = openai.embeddings.create(
         input = text,
@@ -9,7 +11,7 @@ def get_embedding(text, model="text-embedding-3-small"):
     )
     return response.data[0].embedding
 
-
+@traceable
 def retrieval_data(query, qdrant_client, k=5):
     query_embedding = get_embedding(query)
     results = qdrant_client.query_points(
@@ -35,7 +37,7 @@ def retrieval_data(query, qdrant_client, k=5):
 
 
 
-
+@traceable
 def process_context(context):
     formatted_context = ""
 
@@ -45,7 +47,7 @@ def process_context(context):
     return formatted_context
 
 
-
+@traceable
 def build_prompt(preprocessed_context, question):
 
     prompt = f"""
@@ -66,7 +68,7 @@ Question:
 
     return prompt
 
-
+@traceable
 def generate_answer(prompt):
 
     response = openai.chat.completions.create(
@@ -77,7 +79,7 @@ def generate_answer(prompt):
     return response.choices[0].message.content
 
 
-
+@traceable
 def rag_pipeline(question, top_k=5):
 
     qdrant_client = QdrantClient(url="http://qdrant:6333")

@@ -43,6 +43,7 @@ This project implements an intelligent chatbot that answers questions about Amaz
 - **Real-time Chat Interface**: Interactive Streamlit UI with conversation history
 - **Error Handling**: Graceful degradation with user-friendly error messages
 - **Request Tracking**: Unique request IDs for debugging and monitoring
+- **LLM Observability**: LangSmith integration for tracing and monitoring RAG pipeline
 - **Multi-Model Support**: Configurable LLM providers (OpenAI, Google, Groq)
 - **Production-Ready**: Containerized with Docker, non-root users, structured logging
 
@@ -60,6 +61,8 @@ This project implements an intelligent chatbot that answers questions about Amaz
 - **Pydantic** - Data validation and settings management
 - **Uvicorn** - ASGI server for FastAPI
 - **uv** - Fast Python package manager
+- **LangSmith** - Observability and tracing for LLM applications
+- **LangGraph** - Graph-based workflow orchestration
 - **Jupyter** - Notebooks for experimentation
 - **Pandas** - Data manipulation
 - **Matplotlib** - Visualization
@@ -155,12 +158,14 @@ This project implements an intelligent chatbot that answers questions about Amaz
 
 1. **User Query** → Streamlit captures user input
 2. **API Request** → POST to `/rag/` endpoint with query
-3. **Embedding** → Query converted to vector via OpenAI
-4. **Retrieval** → Qdrant finds top-5 similar products
-5. **Context Building** → Retrieved products formatted as context
-6. **Prompt Engineering** → System prompt + context + query
-7. **Generation** → GPT-4 mini generates grounded answer
+3. **Embedding** → Query converted to vector via OpenAI (traced with LangSmith)
+4. **Retrieval** → Qdrant finds top-5 similar products (traced with LangSmith)
+5. **Context Building** → Retrieved products formatted as context (traced with LangSmith)
+6. **Prompt Engineering** → System prompt + context + query (traced with LangSmith)
+7. **Generation** → GPT-4 mini generates grounded answer (traced with LangSmith)
 8. **Response** → Answer displayed in chat interface
+
+All pipeline steps are instrumented with LangSmith's `@traceable` decorator for end-to-end observability, enabling performance monitoring, debugging, and optimization of the RAG workflow.
 
 ### Data Preparation
 
@@ -224,6 +229,38 @@ source .venv/bin/activate
 jupyter lab
 ```
 
+## LangSmith Observability
+
+The RAG pipeline is fully instrumented with LangSmith for comprehensive tracing and monitoring. Every function in the pipeline ([retrieval_generation.py](src/api/rag/retrieval_generation.py)) uses the `@traceable` decorator:
+
+- `get_embedding()` - Tracks embedding API calls and latency
+- `retrieval_data()` - Monitors vector search performance and retrieval quality
+- `process_context()` - Traces context formatting steps
+- `build_prompt()` - Captures prompt engineering patterns
+- `generate_answer()` - Tracks LLM generation metrics
+- `rag_pipeline()` - End-to-end pipeline observability
+
+### Benefits
+
+- **Performance Monitoring**: Track latency at each pipeline step
+- **Cost Tracking**: Monitor API token usage and costs
+- **Debugging**: Inspect inputs/outputs at each stage
+- **Quality Analysis**: Evaluate retrieval relevance and answer quality
+- **Optimization**: Identify bottlenecks and improvement opportunities
+
+### Setup LangSmith (Optional)
+
+1. Sign up at [smith.langchain.com](https://smith.langchain.com)
+2. Get your API key from project settings
+3. Add to `.env`:
+   ```bash
+   LANGSMITH_API_KEY=your-langsmith-key
+   LANGCHAIN_TRACING_V2=true
+   LANGCHAIN_PROJECT=rag-chatbot
+   ```
+4. Restart the application to enable tracing
+5. View traces in the LangSmith dashboard
+
 ## Configuration
 
 ### Environment Variables
@@ -231,6 +268,9 @@ jupyter lab
 - `OPENAI_API_KEY` - Required for embeddings and generation
 - `GOOGLE_API_KEY` - Optional alternative LLM
 - `GROQ_API_KEY` - Optional fast inference API
+- `LANGSMITH_API_KEY` - Optional for LangSmith tracing and monitoring
+- `LANGCHAIN_TRACING_V2` - Set to "true" to enable LangSmith tracing
+- `LANGCHAIN_PROJECT` - Project name for organizing traces in LangSmith
 - `API_URL` - Backend URL (default: http://api:8000)
 
 ### Docker Services
