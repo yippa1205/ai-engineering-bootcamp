@@ -16,11 +16,11 @@ def rag(
     payload: RAGRequest
 ) -> RAGResponse:
 
-    answer = rag_pipeline(payload.query)
+    result = rag_pipeline(payload.query)
 
     return RAGResponse(
         request_id=request.state.request_id,
-        answer=answer
+        answer=result["answer"]
     )
 
 
