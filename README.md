@@ -202,6 +202,8 @@ Processes a user query through the RAG pipeline.
 }
 ```
 
+**Note:** The RAG pipeline now returns enhanced data including retrieved context IDs, full context documents, and similarity scores, though only the answer is exposed through the API endpoint. This enables better debugging and future enhancements.
+
 ## Development
 
 ### Local Development without Docker
@@ -231,22 +233,44 @@ jupyter lab
 
 ## LangSmith Observability
 
-The RAG pipeline is fully instrumented with LangSmith for comprehensive tracing and monitoring. Every function in the pipeline ([retrieval_generation.py](src/api/rag/retrieval_generation.py)) uses the `@traceable` decorator:
+The RAG pipeline is fully instrumented with LangSmith for comprehensive tracing and monitoring. Every function in the pipeline ([retrieval_generation.py](src/api/rag/retrieval_generation.py)) uses the `@traceable` decorator with enhanced metadata:
 
-- `get_embedding()` - Tracks embedding API calls and latency
+- `get_embedding()` - Tracks embedding API calls with token usage metadata
+  - Custom naming: "embed_query"
+  - Run type: "embedding"
+  - Metadata: provider, model name, input/total tokens
 - `retrieval_data()` - Monitors vector search performance and retrieval quality
+  - Custom naming: "retrieve_data"
+  - Run type: "retriever"
 - `process_context()` - Traces context formatting steps
+  - Custom naming: "format_retrieved_context"
+  - Run type: "prompt"
 - `build_prompt()` - Captures prompt engineering patterns
-- `generate_answer()` - Tracks LLM generation metrics
-- `rag_pipeline()` - End-to-end pipeline observability
+  - Custom naming: "build_prompt"
+  - Run type: "prompt"
+- `generate_answer()` - Tracks LLM generation with detailed usage metadata
+  - Custom naming: "generate_answer"
+  - Run type: "llm"
+  - Metadata: provider, model name, input/output/total tokens
+- `rag_pipeline()` - End-to-end pipeline observability with enriched response
+  - Custom naming: "rag_pipeline"
+  - Returns comprehensive result including context, scores, and answer
+
+### Enhanced Features
+
+- **Token Usage Tracking**: Automatic capture of input, output, and total tokens for embedding and LLM calls
+- **Custom Run Names**: Meaningful names for each trace step in LangSmith dashboard
+- **Type Classification**: Proper categorization (embedding, retriever, prompt, llm) for better filtering
+- **Provider Metadata**: Track which AI provider and model is used for each operation
+- **Rich Response Data**: Pipeline now returns full context including retrieved IDs, documents, and similarity scores
 
 ### Benefits
 
-- **Performance Monitoring**: Track latency at each pipeline step
-- **Cost Tracking**: Monitor API token usage and costs
-- **Debugging**: Inspect inputs/outputs at each stage
-- **Quality Analysis**: Evaluate retrieval relevance and answer quality
-- **Optimization**: Identify bottlenecks and improvement opportunities
+- **Performance Monitoring**: Track latency at each pipeline step with detailed breakdowns
+- **Cost Tracking**: Monitor API token usage and costs with precise per-call metrics
+- **Debugging**: Inspect inputs/outputs at each stage with enhanced metadata
+- **Quality Analysis**: Evaluate retrieval relevance and answer quality with similarity scores
+- **Optimization**: Identify bottlenecks and improvement opportunities using categorized traces
 
 ### Setup LangSmith (Optional)
 
