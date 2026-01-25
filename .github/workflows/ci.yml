@@ -34,6 +34,12 @@ jobs:
         run: |
           uv run python -m py_compile $(find src -name "*.py")
 
+      - name: Create dummy .env for CI
+        run: |
+          echo "OPENAI_API_KEY=test_key" > .env
+          echo "GOOGLE_API_KEY=test_key" >> .env
+          echo "GROQ_API_KEY=test_key" >> .env
+
       - name: Validate imports
         run: |
           uv run python -c "import sys; sys.path.insert(0, 'src'); from api.app import app; from chatbot_ui.app import main"
@@ -100,6 +106,12 @@ jobs:
       - name: Install dependencies
         run: |
           uv sync
+
+      - name: Create dummy .env for CI
+        run: |
+          echo "OPENAI_API_KEY=test_key" > .env
+          echo "GOOGLE_API_KEY=test_key" >> .env
+          echo "GROQ_API_KEY=test_key" >> .env
 
       - name: Verify FastAPI app
         run: |
