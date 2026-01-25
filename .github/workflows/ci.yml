@@ -1,0 +1,110 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: |
+          uv sync
+
+      - name: Check Python syntax
+        run: |
+          uv run python -m py_compile $(find src -name "*.py")
+
+      - name: Validate imports
+        run: |
+          uv run python -c "import sys; sys.path.insert(0, 'src'); from api.app import app; from chatbot_ui.app import main"
+
+      - name: Run tests (if they exist)
+        run: |
+          if [ -d "tests" ]; then
+            uv run pytest tests/ -v
+          else
+            echo "No tests directory found - skipping tests"
+            echo "✓ Syntax check passed"
+            echo "✓ Import validation passed"
+          fi
+        continue-on-error: false
+
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - name: Install ruff
+        run: |
+          uv pip install --system ruff
+
+      - name: Run ruff linter
+        run: |
+          ruff check src/ --select E,F,W --ignore E501
+        continue-on-error: true
+
+      - name: Run ruff formatter check
+        run: |
+          ruff format src/ --check
+        continue-on-error: true
+
+  build-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: |
+          uv sync
+
+      - name: Verify FastAPI app
+        run: |
+          uv run python -c "from src.api.app import app; print('✓ FastAPI app loads successfully')"
+
+      - name: Verify Streamlit app
+        run: |
+          uv run python -c "from src.chatbot_ui.app import main; print('✓ Streamlit app loads successfully')"
