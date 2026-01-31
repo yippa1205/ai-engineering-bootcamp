@@ -96,7 +96,8 @@ This project implements an intelligent chatbot that answers questions about Amaz
 │   └── week_2/
 │       ├── 01-RAG-preprocessing-Amazon.ipynb
 │       ├── 02-RAG-pipeline.ipynb
-│       └── 03-Patrick-GPT-models.ipynb
+│       ├── 03-Patrick-GPT-models.ipynb
+│       └── 03-evaluation-dataset.ipynb  # Synthetic eval dataset generation
 │
 ├── data/                           # Dataset storage
 │   ├── Electronics.jsonl           # Amazon electronics data
@@ -181,6 +182,16 @@ The Amazon electronics dataset is processed through Jupyter notebooks:
    - Upload to Qdrant vector database
    - Create collection: "Amazon-items-collection-00"
 
+3. **Evaluation Dataset Generation** (`03-evaluation-dataset.ipynb`)
+   - Retrieve all product chunks from Qdrant vector database
+   - Generate synthetic evaluation questions using GPT-4
+   - Create diverse question types:
+     - 10 multi-chunk questions (require multiple products)
+     - 15 single-chunk questions (answerable from one product)
+     - 5 unanswerable questions (cannot be answered from available data)
+   - Store evaluation dataset in LangSmith for pipeline testing
+   - Include ground truth answers and reference context for each question
+
 ## API Endpoints
 
 ### POST `/rag/`
@@ -230,6 +241,26 @@ source .venv/bin/activate
 # Launch Jupyter
 jupyter lab
 ```
+
+## Evaluation & Testing
+
+### Synthetic Evaluation Dataset
+
+The project includes a systematic approach to RAG pipeline evaluation using synthetic test data:
+
+- **Dataset Creation**: Automated generation of 30 evaluation questions using GPT-4
+- **Question Diversity**: Mix of single-chunk, multi-chunk, and unanswerable questions
+- **Ground Truth**: Each question includes expected answers and reference product IDs
+- **LangSmith Integration**: Evaluation dataset stored in LangSmith for systematic testing
+- **Context Tracking**: Reference descriptions linked to each question for validation
+
+This enables:
+- Systematic testing of RAG retrieval quality
+- Answer accuracy validation against ground truth
+- Edge case handling (unanswerable questions)
+- Performance benchmarking across pipeline changes
+
+See [03-evaluation-dataset.ipynb](notebooks/week_2/03-evaluation-dataset.ipynb) for implementation details.
 
 ## LangSmith Observability
 
